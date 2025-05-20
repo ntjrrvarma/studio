@@ -31,15 +31,17 @@ const MessageBubble: FC<MessageBubbleProps> = ({ message }) => {
   };
 
   const formatTimestamp = (timestamp: Message['timestamp']): string => {
-    if (!timestamp) return new Date().toLocaleTimeString();
-    if (timestamp instanceof Date) {
-      return timestamp.toLocaleTimeString();
+    let dateToShow: Date;
+    if (!timestamp) {
+      dateToShow = new Date();
+    } else if (timestamp instanceof Date) {
+      dateToShow = timestamp;
+    } else if (typeof timestamp === 'object' && 'seconds' in timestamp && typeof timestamp.seconds === 'number') {
+      dateToShow = new Date(timestamp.seconds * 1000);
+    } else {
+      dateToShow = new Date();
     }
-    // Check for Firestore Timestamp-like structure (duck typing for server/client differences)
-    if (typeof timestamp === 'object' && 'seconds' in timestamp && typeof timestamp.seconds === 'number') {
-      return new Date(timestamp.seconds * 1000).toLocaleTimeString();
-    }
-    return new Date().toLocaleTimeString();
+    return dateToShow.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
   };
   
   return (
