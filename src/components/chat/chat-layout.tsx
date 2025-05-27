@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { signInAnonymously, onAuthStateChanged, signInWithCustomToken, type User as FirebaseUser } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp, Timestamp } from 'firebase/firestore'; // Removed 'collection' as it wasn't used here
+import { doc, setDoc, getDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { HelpCircle, MessageSquare, User, Users, Send, AlertTriangle } from 'lucide-react';
 
 import { auth, db } from '@/lib/firebase';
@@ -19,11 +19,26 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ChatLayout: React.FC = () => {
+  // Immediately check if Firebase services are available from lib/firebase.ts
+  if (!auth || !db) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Initialization Error</AlertTitle>
+          <AlertDescription>
+            PolicyPal could not be initialized. Firebase configuration might be missing or invalid. Please check your environment setup or contact support.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   const [userId, setUserId] = useState<string | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [conversation, setConversation] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Combined isLoading from auth and AI
+  const [isLoading, setIsLoading] = useState(false);
   const [showHumanHandoverModal, setShowHumanHandoverModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,13 +52,8 @@ const ChatLayout: React.FC = () => {
 
   // Firebase Authentication
   useEffect(() => {
-    if (!auth) {
-      console.warn("Firebase auth is not initialized.");
-      setIsAuthReady(true); 
-      setError("Authentication service is not available.");
-      return;
-    }
-    setIsLoading(true); // Start loading for auth
+    // This effect now assumes 'auth' is non-null due to the check above.
+    setIsLoading(true);
     const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
       if (user) {
         setUserId(user.uid);
@@ -62,16 +72,16 @@ const ChatLayout: React.FC = () => {
         }
       }
       setIsAuthReady(true);
-      setIsLoading(false); // Stop loading for auth
+      setIsLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
   // Load conversation from Firestore
   const loadConversation = useCallback(async () => {
-    if (!db || !userId || !isAuthReady || !appIdRef.current) {
-      if (isAuthReady && !db) console.warn("Firestore is not initialized. Cannot load conversation.");
-      if (isAuthReady && db && !appIdRef.current) console.warn("App ID not available. Cannot load conversation.");
+    // db and auth are assumed non-null here due to the initial check
+    if (!userId || !isAuthReady || !appIdRef.current) {
+      if (isAuthReady && !appIdRef.current) console.warn("App ID not available. Cannot load conversation.");
       
       if (conversation.length === 0) {
         setConversation([
@@ -80,10 +90,9 @@ const ChatLayout: React.FC = () => {
       }
       return;
     }
-    // Keep isLoading true if auth is still loading, otherwise set for conversation loading
     setIsLoading(prev => prev || true);
     try {
-      const conversationDocRef = doc(db, `artifacts/${appIdRef.current}/users/${userId}/hrFaqConversations`, 'mainThread');
+      const conversationDocRef = doc(db!, `artifacts/${appIdRef.current}/users/${userId}/hrFaqConversations`, 'mainThread');
       const docSnap = await getDoc(conversationDocRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -106,7 +115,7 @@ const ChatLayout: React.FC = () => {
         ]);
        }
     } finally {
-      setIsLoading(false); // Stop loading after conversation load attempt
+      setIsLoading(false);
     }
   }, [userId, isAuthReady, conversation.length]);
 
@@ -119,8 +128,8 @@ const ChatLayout: React.FC = () => {
 
 
   const saveConversationBatch = async (updatedMessages: Message[]) => {
-    if (!db || !userId || !appIdRef.current) {
-      if (!db) console.warn("Firestore is not initialized. Cannot save conversation.");
+    // db and auth are assumed non-null here
+    if (!userId || !appIdRef.current) {
       return;
     }
     try {
@@ -128,7 +137,7 @@ const ChatLayout: React.FC = () => {
         ...msg,
         timestamp: msg.timestamp instanceof Date ? Timestamp.fromDate(msg.timestamp) : (msg.timestamp || serverTimestamp())
       }));
-      const conversationDocRef = doc(db, `artifacts/${appIdRef.current}/users/${userId}/hrFaqConversations`, 'mainThread');
+      const conversationDocRef = doc(db!, `artifacts/${appIdRef.current}/users/${userId}/hrFaqConversations`, 'mainThread');
       await setDoc(conversationDocRef, { messages: messagesToSave, lastUpdated: serverTimestamp() }, { merge: true });
     } catch (e: any) {
       console.error("Error saving conversation:", e);
@@ -184,26 +193,12 @@ const ChatLayout: React.FC = () => {
     }
   };
     
-  if (!isAuthReady && auth === null) { // Firebase itself failed to init (db or auth is null)
-     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-             <Alert variant="destructive" className="max-w-md">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Initialization Error</AlertTitle>
-                <AlertDescription>
-                HR Assistant could not be initialized. Firebase configuration might be missing or invalid. Please contact support.
-                </AlertDescription>
-            </Alert>
-        </div>
-     )
-  }
-
-  if (!isAuthReady || isLoading && conversation.length === 0) { // Show loading if auth not ready OR still loading initial data
+  if (!isAuthReady || (isLoading && conversation.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
         <div className="animate-pulse flex flex-col items-center space-y-2">
             <MessageSquare size={48} className="text-primary"/>
-            <p className="text-lg text-foreground">Initializing HR Assistant...</p>
+            <p className="text-lg text-foreground">Initializing PolicyPal Assistant...</p>
         </div>
       </div>
     );
@@ -237,7 +232,7 @@ const ChatLayout: React.FC = () => {
             </Button>
           </div>
         </div>
-        { auth && userId && (
+        { userId && ( // auth is implicitly checked by the early return, userId implies auth succeeded
           <div className="container mx-auto mt-2 text-xs text-primary-foreground/80 bg-primary/90 p-2 rounded-md">
             <User size={14} className="inline mr-1" />
             You are interacting with an AI assistant. This AI is under development. For critical issues, use "Talk to a Human". User ID: <span className="font-mono bg-primary/70 px-1 rounded">{userId}</span>
@@ -279,9 +274,7 @@ const ChatLayout: React.FC = () => {
             className="bg-primary text-primary-foreground p-3 rounded-r-lg hover:bg-primary/90 w-24"
             aria-label="Send message"
           >
-            {isLoading && !isAuthReady ? ( // Distinguish between auth loading and AI loading
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-foreground"></div>
-            ) : isLoading ? (
+            {isLoading ? ( 
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-foreground"></div>
             ) : (
               <Send size={20} />
