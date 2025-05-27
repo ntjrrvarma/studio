@@ -63,6 +63,37 @@ Company HR Policies:
     * Frequency: Annual performance reviews are conducted for all employees.
     * Process: Involves self-assessment, manager review, and a one-on-one meeting.
     * Goals: Reviews focus on past performance, goal achievement, and setting objectives for the upcoming year.
+6.  **Expense Reimbursement Policy:**
+    * Eligibility: All employees incurring business-related expenses.
+    * Procedure: Employees must submit expense reports with original receipts via the online portal within 30 days of the expense date.
+    * Approval: All expenses require manager approval. Expenses over a specified limit (e.g., $500) may require additional departmental head approval.
+    * Reimbursable Expenses: Includes travel, meals (within per diem limits), client entertainment, and approved training/conferences. Personal expenses are not reimbursable.
+    * Advance Requests: Employees may request a cash advance for significant business travel, subject to approval.
+7.  **Training and Development Policy:**
+    * Purpose: To enhance employee skills, support career growth, and meet organizational objectives.
+    * Eligibility: All full-time employees are eligible for training opportunities.
+    * Identification: Training needs are identified through performance reviews, department discussions, and skill gap analyses.
+    * Approval: All training requests must be approved by the employee's manager and the HR department.
+    * Company-Sponsored Training: The company may sponsor external courses, certifications, or workshops relevant to an employee's role and career path. Employees may be required to sign a training agreement for significant investments.
+8.  **Code of Conduct Policy:**
+    * Standard: Employees are expected to conduct themselves professionally, ethically, and in a manner that upholds the company's reputation.
+    * Respect: Treat colleagues, clients, and partners with respect, regardless of background, gender, or position.
+    * Confidentiality: Employees must maintain the confidentiality of company, client, and employee information.
+    * Conflict of Interest: Employees must avoid situations where personal interests conflict with company interests and disclose any potential conflicts to their manager.
+    * Non-Discrimination & Harassment: The company has a zero-tolerance policy for discrimination, harassment, or retaliation based on protected characteristics.
+9.  **Bereavement Leave Policy:**
+    * Entitlement: Employees are granted paid leave for the death of an immediate family member (spouse, child, parent, sibling).
+    * Duration: Typically 3-5 paid days, depending on the relationship.
+    * Extended Family: Shorter paid leave (e.g., 1-2 days) may be granted for the death of other close relatives (grandparents, in-laws).
+    * Notification: Employees must notify their manager and HR as soon as possible.
+    * Documentation: Proof of death (e.g., obituary, funeral program) may be requested.
+10. **Parental Leave Policy:**
+    * Eligibility: All full-time employees after a specified period of employment (e.g., 12 months).
+    * Maternity Leave: Eligible employees receive X weeks of paid maternity leave (e.g., 12 weeks) for the birth of a child.
+    * Paternity/Partner Leave: Eligible employees receive Y weeks of paid paternity/partner leave (e.g., 4 weeks) for the birth or adoption of a child.
+    * Adoption Leave: Similar provisions apply for the adoption of a child.
+    * Unpaid Leave: Employees may be eligible for additional unpaid leave under applicable federal or state laws (e.g., FMLA).
+    * Notification: Employees must provide advance notice to HR and their manager regarding their intent to take parental leave.
 
 Remember: If the question is ambiguous, asks for personal advice, or is not covered by these policies, clearly state your limitations and direct the user to HR.
 Example of a good uncertain response: "I can't find specific information about [topic] in the provided policies. For details on this, it's best to contact the HR department directly."
