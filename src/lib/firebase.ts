@@ -1,3 +1,4 @@
+
 // src/lib/firebase.ts
 import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
@@ -8,35 +9,39 @@ let app: FirebaseApp;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 
-let firebaseConfigString: string;
+let firebaseConfigString: string = '{}'; // Default to an empty, parsable JSON string
 
-// Check for client-side environment and window.__firebase_config first
-if (typeof window !== 'undefined' && (window as any).__firebase_config) {
+if (typeof window !== 'undefined') {
+  // Client-side: Exclusively rely on window.__firebase_config
   const configFromWindow = (window as any).__firebase_config;
-  if (typeof configFromWindow === 'string' && configFromWindow.trim() !== '' && configFromWindow.trim() !== '{}') {
-    try {
-      // Validate if it's a parsable JSON string
-      JSON.parse(configFromWindow);
-      firebaseConfigString = configFromWindow;
-    } catch (e) {
-      console.warn("window.__firebase_config is not a valid JSON string, falling back.", e);
-      firebaseConfigString = getFirebaseConfigJson(); // Fallback
-    }
-  } else if (typeof configFromWindow === 'object' && Object.keys(configFromWindow).length > 0) {
-    firebaseConfigString = JSON.stringify(configFromWindow);
-  } else {
-    if (typeof configFromWindow !== 'string' && typeof configFromWindow !== 'object') {
-        console.warn(`window.__firebase_config is of unexpected type (${typeof configFromWindow}), falling back.`);
+
+  if (configFromWindow) {
+    if (typeof configFromWindow === 'string') {
+      // Attempt to parse to ensure it's valid JSON and not just an empty string literal like "{}"
+      try {
+        const parsed = JSON.parse(configFromWindow);
+        if (Object.keys(parsed).length > 0) {
+          firebaseConfigString = configFromWindow;
+        } else {
+          console.warn("window.__firebase_config is an empty JSON object string. Firebase features will be disabled.");
+        }
+      } catch (e) {
+        console.warn("window.__firebase_config is not a valid JSON string. Firebase features will be disabled.", e);
+        // firebaseConfigString remains '{}'
+      }
+    } else if (typeof configFromWindow === 'object' && Object.keys(configFromWindow).length > 0) {
+      firebaseConfigString = JSON.stringify(configFromWindow);
     } else {
-        console.warn("window.__firebase_config is empty or invalid, falling back.");
+      console.warn("window.__firebase_config is present but not a usable string or non-empty object. Firebase features will be disabled.");
+      // firebaseConfigString remains '{}'
     }
-    firebaseConfigString = getFirebaseConfigJson(); // Fallback
+  } else {
+    console.warn("window.__firebase_config not found on client. Firebase features will be disabled.");
+    // firebaseConfigString remains '{}'
   }
 } else {
-  // Fallback for server-side or if window.__firebase_config is not present/applicable
-  if (typeof window !== 'undefined') {
-    console.warn("window.__firebase_config not found or not applicable, falling back to getFirebaseConfigJson().");
-  }
+  // NOT client-side (e.g., server-side rendering, build process):
+  // Attempt to use getFirebaseConfigJson which relies on process.env
   firebaseConfigString = getFirebaseConfigJson();
 }
 
@@ -52,10 +57,10 @@ try {
     db = getFirestore(app);
     // setLogLevel('debug'); // Uncomment for Firestore debug logging if needed
   } else {
-    console.warn("Firebase config (after attempting window.__firebase_config or fallback) is effectively empty. Firebase features will be disabled.");
+    console.warn("Firebase config is effectively empty after attempting all sources. Firebase features will be disabled.");
   }
 } catch (error) {
-  console.error("Error parsing Firebase config string or initializing Firebase:", error, "Config string used:", firebaseConfigString);
+  console.error("Error parsing final Firebase config string or initializing Firebase:", error, "Final config string used for parsing:", firebaseConfigString);
 }
 
 export { app, auth, db };
